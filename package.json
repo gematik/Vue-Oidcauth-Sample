@@ -1,0 +1,70 @@
+{
+  "name": "vue-oidcauth-sample",
+  "version": "3.1.0",
+  "private": true,
+  "author": "Gematik GmbH",
+  "description": "Example Relaying Party project for testing gematik Authenticator",
+  "license": "European Union Public License 1.2",
+  "scripts": {
+    "serve": "vue-cli-service serve --skip-plugins eslint --port 8090",
+    "serve:dev": "vue-cli-service serve --skip-plugins eslint --port 8090",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gematik/Vue-Oidcauth-Sample",
+    "provider": "github"
+  },
+  "bugs": {
+    "url": "https://github.com/gematik/Vue-Oidcauth-Sample/issues"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss7-compat": "^2.2.4",
+    "axios": "^0.27.2",
+    "base64-arraybuffer": "^0.2.0",
+    "core-js": "^3.6.5",
+    "json-markup": "^1.1.3",
+    "jwt-decode": "^3.1.2",
+    "request-promise-native": "^1.0.9",
+    "vue": "^3.2.32",
+    "vue-router": "^4.0.14",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^15.12.1",
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-plugin-typescript": "~4.5.0",
+    "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-sfc": "^3.0.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-typescript": "^7.0.0",
+    "autoprefixer": "^9.8.6",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-vue": "^7.0.0",
+    "postcss": "^7.0.36",
+    "prettier": "^2.2.1",
+    "prettier-eslint-cli": "^5.0.1",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.4",
+    "typescript": "~4.1.5",
+    "webpack-cli": "^4.9.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,vue,ts,tsx}": [
+      "vue-cli-service lint",
+      "git add"
+    ]
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
