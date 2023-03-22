@@ -1,19 +1,15 @@
 <!--
-  - Copyright (c) 2023 gematik GmbH
-  - 
-  - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
-  - the European Commission - subsequent versions of the EUPL (the Licence);
-  - You may not use this work except in compliance with the Licence.
-  - You may obtain a copy of the Licence at:
-  - 
-  -     https://joinup.ec.europa.eu/software/page/eupl
-  - 
-  - Unless required by applicable law or agreed to in writing, software
-  - distributed under the Licence is distributed on an "AS IS" basis,
-  - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  - See the Licence for the specific language governing permissions and
-  - limitations under the Licence.
-  - 
+  - Copyright 2023 gematik GmbH
+  -
+  - The Authenticator App is licensed under the European Union Public Licence (EUPL); every use of the Authenticator App
+  - Sourcecode must be in compliance with the EUPL.
+  -
+  - You will find more details about the EUPL here: https://joinup.ec.europa.eu/collection/eupl
+  -
+  - Unless required by applicable law or agreed to in writing, software distributed under the EUPL is distributed on an "AS
+  - IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the EUPL for the specific
+  - language governing permissions and limitations under the License.ee the Licence for the specific language governing
+  - permissions and limitations under the Licence.
   -->
 
 <template>
@@ -31,17 +27,7 @@
           <td class="border p-2 text-left">{{ keyToName(key) }}</td>
           <td class="border p-2">
             <input
-              class="
-                bg-gray-200
-                appearance-none
-                border-2 border-gray-200
-                rounded
-                w-full
-                p-2
-                text-gray-700
-                leading-tight
-                focus:outline-none focus:bg-white focus:border-purple-500
-              "
+              class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full p-2 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
               type="url"
               name=""
               id=""
@@ -54,18 +40,7 @@
     <div class="flex items-center mb-20">
       <div class="w-3/3">
         <button
-          class="
-            shadow
-            bg-blue-900
-            hover:bg-blue-800
-            focus:shadow-outline focus:outline-none
-            text-white
-            font-bold
-            py-2
-            px-4
-            rounded
-            mb-2
-          "
+          class="shadow bg-blue-900 hover:bg-blue-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded mb-2"
           type="submit"
           v-on:click="save"
         >

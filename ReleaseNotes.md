@@ -2,4 +2,5 @@
 
 # Release Vue-Oidcauth-Sample
 
-## Release 3.1.0
+## Release 4.0.0 (2023-03-22)
+- Redirect to webapplication as alternative to browseropen
