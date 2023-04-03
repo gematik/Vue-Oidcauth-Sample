@@ -1,6 +1,11 @@
-<img align="right" width="200" height="37" src="src/assets/Gematik_Logo_Flag.png"/> <br/>
+<div style='text-align: right; margin-top: 30px'>
+  <img alt='Gematik Logo' style='height: 37px' src="src/assets/Gematik_Logo_Flag.png"/>
+</div> 
+
+<br/>
 
 # vue-oidcauth-sample
+
 <details>
     <summary>Table of Contents</summary>
         <ol>
@@ -11,11 +16,13 @@
             </li>
             <li><a href="#development">Development</a>
                 <ul>
+                    <li><a href="#stack">Stack</a></li>
                     <li><a href="#project-setup">Project Setup</a></li>
                     <li><a href="#compiles-and-hot-reloads-for-development">Compiles and hot-reloads for development</a></li>
                     <li><a href="#compiles-and-minifies-for-production">Compiles and minifies for production</a></li>
                     <li><a href="#lints-and-fixes-files">Lints and fixes files</a></li>
                     <li><a href="#customize-configuration">Customize configuration</a></li>
+                    <li><a href="#default-config">Default Config</a></li>
                 </ul>
             </li>
             <li><a href="#contributing">Contributing</a></li>
@@ -26,12 +33,29 @@
 </details>
 
 ## About The Project
-This repository is an example Relaying Party project for testing gematik Authenticator.
+
+This repository is an example Relaying Party project for testing gematik Authenticator. It is a combine of oidc client
+and resource server with a simple UI.
 
 ### Release Notes
 
 See [ReleaseNotes.md](./ReleaseNotes.md) for all information regarding the (newest) releases.
+
 ## Development
+
+### Stack
+
+This is a TypeScript project based Nuxt 3 framework. Behind the scenes, these are the used libraries and frameworks:
+
+- Typescript
+- NuxtJS 3
+- Vue 3
+- Pinia
+- TailwindCSS
+- Vite
+- EsLint
+- Prettier
+
 ### Project setup
 
 ```
@@ -41,7 +65,7 @@ npm install
 ### Compiles and hot-reloads for development
 
 ```
-npm run serve
+npm run dev
 ```
 
 ### Compiles and minifies for production
@@ -58,7 +82,49 @@ npm run lint
 
 ### Customize configuration
 
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Configuration Reference](https://nuxt.com/docs/api/configuration/nuxt-config).
+
+### Default Config
+
+The `default-configs.yml` file in the root directory contains default configurations for the application. It is possible
+to add custom  settings to the file and these settings will appear on the settings page.
+
+The following is a list of the most commonly used configurations that are contained in the `default-configs.yml` file.
+
+#### DEFAULT_CONFIG:
+
+This section of the configuration file contains the default configuration settings for the application.
+
+* `IDP_HOST` - This is the address of the identity provider used for authentication.
+* `REDIRECT_URI` - This is the URL that the application will redirect the user to after authentication.
+* `CLIENT_ID` - This is the unique identifier for the application when it is connecting to the identity provider.
+* `SCOPE` - This is the list of permissions that the user must grant to the application before it can access their data.
+* `AUTHENTICATOR_HOST_KEY` - This is the address of the authenticator host.
+* `CARD_TYPE_KEY` - This is the type of card that can be used with the application.
+* `REDIRECT_AUTOMATICALLY_KEY` - This setting determines whether the application will automatically redirect the user
+  after they have authenticated or not.
+
+#### Example YML Structure:
+
+    DEFAULT_CONFIG:
+      IDP_HOST: "http://..."
+      REDIRECT_URI: "http://.../callback"
+      CLIENT_ID: "CLIENT_X"
+      SCOPE: "openid gem-auth Person_ID"
+      AUTHENTICATOR_HOST_KEY: "authenticator://"
+      CARD_TYPE_KEY: "HBA"
+      REDIRECT_AUTOMATICALLY_KEY: "false"
+    
+    DEFAULT_CONFIG_BY_TYPES:
+      LOCAL_IDP:
+        IDP_HOST: "http://..."
+        REDIRECT_URI: "http://.../callback"
+        CLIENT_ID: "CLIENT_X"
+
+      REMOTE_IDP:
+        IDP_HOST: "http://..."
+        REDIRECT_URI: "http://.../callback"
+        CLIENT_ID: "CLIENT_Y"
 
 ## Contributing
 

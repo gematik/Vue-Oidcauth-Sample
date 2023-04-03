@@ -2,7 +2,6 @@
 node_modules
 /dist
 yarn.lock
-
 # local env files
 .env.local
 .env.*.local
@@ -24,5 +23,16 @@ pnpm-debug.log*
 *.sw?
 *.iml
 
+
+*.log*
+.nuxt
+.nitro
+.cache
+.output
+.env
+dist
+
 Jenkinsfile
 Github-Release.Jenkinsfile
+default-configs.yml
+

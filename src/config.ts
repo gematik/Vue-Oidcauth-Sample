@@ -12,63 +12,69 @@
  * permissions and limitations under the Licence.
  */
 
-import {
-  CONFIG_AUTH_TOKEN_CHECK_ENDPOINT_KEY,
-  CONFIG_AUTHENTICATOR_HOST_KEY,
-  CONFIG_CARD_TYPE_KEY,
-  CONFIG_LOGIN_URL_KEY,
-  CONFIG_PROFILE_URL_KEY,
-  CONFIG_REDIRECT_AUTOMATICALLY_KEY,
-  CONFIG_SHOW_ALERT_KEY,
-  CONFIG_USER_INFO_URL_KEY,
-  CONFIGS_LOCAL_STORAGE_KEY,
-} from '@/constants';
+import { DEFAULT_CONFIG, LOCAL_STORAGE_KEYS } from '@/constants'
 
-const DEFAULT_CONFIGS = {
-  [CONFIG_LOGIN_URL_KEY]: 'http://localhost:3500/gem-cidp-login',
-  [CONFIG_AUTHENTICATOR_HOST_KEY]: 'authenticator://',
-  [CONFIG_PROFILE_URL_KEY]: 'http://localhost:3500/secure-gem-cidp-profile',
-  [CONFIG_USER_INFO_URL_KEY]: 'http://localhost:3500/secure/userinfo',
-  [CONFIG_CARD_TYPE_KEY]: 'HBA',
-  [CONFIG_SHOW_ALERT_KEY]: 'false',
-  [CONFIG_AUTH_TOKEN_CHECK_ENDPOINT_KEY]: 'http://localhost:3500/check-auth-code',
-  [CONFIG_REDIRECT_AUTOMATICALLY_KEY]: 'false',
-};
+// the single source of truth for all config values
+let CONFIG_DATA: Record<string, string> = {}
 
-export function loadConfigs(): { [string: string]: string } {
-  const localDataPlain = localStorage.getItem(CONFIGS_LOCAL_STORAGE_KEY);
-  if (localDataPlain) {
-    const configValues = JSON.parse(localDataPlain || '{}');
-
-    return {
-      ...DEFAULT_CONFIGS,
-      ...configValues,
-    };
+// get configs
+export function getConfigs(): Record<string, string> {
+  // if there is no config data, load it
+  if (Object.keys(CONFIG_DATA).length === 0) {
+    loadConfigs()
   }
 
-  return DEFAULT_CONFIGS;
+  return CONFIG_DATA
 }
 
-export function getConfig(key: string, parseJson = false): string {
-  const value = loadConfigs()[key];
+export function getConfig(key: string, parseJson = false): string | Record<string, string> | null | boolean {
+  // if there is no config data, load it
+  if (Object.keys(CONFIG_DATA).length === 0) {
+    loadConfigs()
+  }
+
+  const value = CONFIG_DATA[key]
 
   if (!parseJson) {
-    return value;
+    return value
   }
 
   try {
-    return JSON.parse(value);
+    return JSON.parse(value)
   } catch (e) {
-    return '';
+    return ''
   }
+}
+
+export function loadConfigs() {
+  // config already loaded, return cached data
+  if (Object.keys(CONFIG_DATA).length > 0) {
+    return
+  }
+
+  const localDataPlain = localStorage.getItem(LOCAL_STORAGE_KEYS.CONFIGS_LOCAL_STORAGE)
+
+  // load config from local storage
+  if (localDataPlain) {
+    try {
+      const configValues = JSON.parse(localDataPlain || '{}')
+
+      CONFIG_DATA = {
+        ...DEFAULT_CONFIG,
+        ...configValues
+      }
+      return
+    } catch (e) {
+      CONFIG_DATA = DEFAULT_CONFIG
+      return
+    }
+  }
+
+  // load default config
+  CONFIG_DATA = DEFAULT_CONFIG
 }
 
 export function saveConfig(configs: { [string: string]: string }) {
-  localStorage.setItem(CONFIGS_LOCAL_STORAGE_KEY, JSON.stringify(configs));
-}
-
-export function debugAlert(message?: any) {
-  if (JSON.parse(getConfig(CONFIG_SHOW_ALERT_KEY))) {
-    alert(message);
-  }
+  localStorage.setItem(LOCAL_STORAGE_KEYS.CONFIGS_LOCAL_STORAGE, JSON.stringify(configs))
+  CONFIG_DATA = configs
 }

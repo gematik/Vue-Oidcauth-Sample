@@ -12,13 +12,11 @@
  * permissions and limitations under the Licence.
  */
 
-module.exports = {
-  devServer: {
-    host: '0.0.0.0',
-    compress: true,
-    inline: true,
-    port: '8990',
-    https: false,
-    disableHostCheck: true,
-  },
-};
+/**
+ * This variable contains reply objects of /check-auth-code route. {[state]: replayObject}
+ * When we receive a /callback request with same state, it will replay the /check-auth-code request with code/token
+ *
+ */
+const awaitingTokenSessions: Record<string, (value: unknown) => void> = {}
+
+export default awaitingTokenSessions
