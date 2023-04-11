@@ -12,30 +12,78 @@
  * permissions and limitations under the Licence.
  */
 
+const runtimeConfig = useRuntimeConfig()
+
+export enum CARD_TYPE {
+  HBA = 'HBA',
+  SMCB = 'SMC-B'
+}
+
+export enum SCOPE_TYPES {
+  'HBA' = 'openid gem-auth Person_ID',
+  'SMC-B' = 'openid gem-auth Institutions_ID'
+}
+
 /**
- * localStorage key for the saved configs
+ * localStorage keys
  */
-export const CONFIGS_LOCAL_STORAGE_KEY = 'de.gematik.authenticator.clientsample.configs';
+export const LOCAL_STORAGE_KEYS = {
+  CODE_VERIFIER: 'de.gematik.authenticator.clientsample.codeVerifier',
+  CONFIGS_LOCAL_STORAGE: 'de.gematik.authenticator.clientsample.configs'
+}
 
-export const CONFIG_LOGIN_URL_KEY = 'CONFIG_LOGIN_URL_KEY';
-export const CONFIG_PROFILE_URL_KEY = 'CONFIG_PROFILE_URL_KEY';
-export const CONFIG_USER_INFO_URL_KEY = 'CONFIG_USER_INFO_URL_KEY';
-export const CONFIG_AUTHENTICATOR_HOST_KEY = 'CONFIG_AUTHENTICATOR_HOST_KEY';
-export const CONFIG_CARD_TYPE_KEY = 'CONFIG_CARD_TYPE_KEY';
-export const CONFIG_SHOW_ALERT_KEY = 'CONFIG_SHOW_ALERT_KEY';
-export const CONFIG_AUTH_TOKEN_CHECK_ENDPOINT_KEY = 'CONFIG_AUTH_TOKEN_CHECK_ENDPOINT_KEY';
-export const CONFIG_REDIRECT_AUTOMATICALLY_KEY = 'CONFIG_REDIRECT_AUTOMATICALLY_KEY';
+export const CONFIG_KEYS = {
+  IDP_HOST: 'IDP_HOST',
+  SCOPE: 'SCOPE',
+  CLIENT_ID: 'CLIENT_ID',
+  REDIRECT_URI: 'REDIRECT_URI',
+  AUTHENTICATOR_HOST_KEY: 'AUTHENTICATOR_HOST_KEY',
+  CARD_TYPE_KEY: 'CARD_TYPE_KEY',
+  REDIRECT_AUTOMATICALLY_KEY: 'REDIRECT_AUTOMATICALLY_KEY'
+}
 
-export const SCOPE_ADDITION_HBA = ' Person_ID'
-export const SCOPE_ADDITION_SMCB = ' Institutions_ID'
+// see the readme file to see more about the default configs
+export const DEFAULT_CONFIG = {
+  ...runtimeConfig?.public?.defaultConfigs?.DEFAULT_CONFIG
+}
 
-export const CONFIG_KEY_NAME_MAP = {
-  CONFIG_LOGIN_URL_KEY: 'Login Url',
-  CONFIG_PROFILE_URL_KEY: 'Profile Url ',
-  CONFIG_USER_INFO_URL_KEY: 'User Info Url',
-  CONFIG_AUTHENTICATOR_HOST_KEY: 'Authenticator Host',
-  CONFIG_CARD_TYPE_KEY: 'Card type',
-  CONFIG_SHOW_ALERT_KEY: 'Show Alert',
-  CONFIG_AUTH_TOKEN_CHECK_ENDPOINT_KEY: 'Check Auth Token URL',
-  CONFIG_REDIRECT_AUTOMATICALLY_KEY: 'Redirect Automatically',
-};
+export const DEFAULT_CONFIG_BY_TYPES: Record<string, Record<string, string>> = {
+  ...runtimeConfig?.public?.defaultConfigs?.DEFAULT_CONFIG_BY_TYPES
+}
+
+/**
+ * Options types for FormInput DropDown element.
+ * If you implement anything, please also add types in the FormInput element
+ */
+export type TFormInputDropDownOptionType = 'boolean'
+
+/**
+ * If option list is not suitable with OptionsType we can give a custom option list for the dropdown
+ */
+export type TFormInputDropDownOptions = { text: string; value: string | boolean | number }
+
+/**
+ * If option list is not suitable with OptionsType we can give a custom option list for the dropdown
+ */
+export enum TFormInputColumnTypes {
+  input = 'input',
+  number = 'number',
+  email = 'email',
+  text = 'text',
+  dropDown = 'drop-down'
+}
+
+export type TConfig = {
+  label: string
+  key: string
+  type: TFormInputColumnTypes
+  required?: boolean
+  iterable?: boolean
+  placeholder?: string
+  optionsType?: TFormInputDropDownOptionType
+  options?: TFormInputDropDownOptions[]
+  hide?: boolean
+  validationRegex?: RegExp
+  onChange?: (...args: any[]) => void
+  infoText?: string
+}
