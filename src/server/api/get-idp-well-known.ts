@@ -12,14 +12,18 @@
  * permissions and limitations under the Licence.
  */
 
-module.exports = {
-  purge: [],
-  darkMode: false, // or 'media' or 'class'
-  theme: {
-    extend: {},
-  },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
-};
+export default defineEventHandler(async (event) => {
+  try {
+    const body = await readBody(event)
+    const idpHost = body.idpHost
+
+    const wellKnown = await fetch(`${idpHost}/.well-known/openid-configuration`)
+
+    return await wellKnown.text()
+  } catch (e) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify(e)
+    }
+  }
+})

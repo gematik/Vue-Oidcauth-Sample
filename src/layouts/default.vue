@@ -12,31 +12,25 @@
   - permissions and limitations under the Licence.
   -->
 
+<script lang="ts" setup></script>
+
 <template>
-  <div class="text-center">Redirecting...</div>
+  <div>
+    <div class="flex justify-center">
+      <img class="h-28" src="@/assets/logo_gematik.png" />
+    </div>
+
+    <slot />
+  </div>
 </template>
 
-<script>
-import { debugAlert } from '@/config';
+<style>
+#nav a {
+  font-weight: bold;
+  color: #2c3e50;
+}
 
-export default {
-  created() {
-    debugAlert('WE HAVE RECEIVED THE AuthenticationRequest(307)');
-    const routeParams = { ...this.$route.query };
-    const HOST = routeParams.authz_path;
-    delete routeParams.authz_path;
-    location.href = HOST + '?' + this.serialize(routeParams);
-    debugAlert('NOW WE GO TO KEYCLOAK');
-  },
-  methods: {
-    serialize(obj) {
-      const str = [];
-      for (let p in obj)
-        if (obj[p]) {
-          str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
-        }
-      return str.join('&');
-    },
-  },
-};
-</script>
+#nav a.router-link-exact-active {
+  color: #42b983;
+}
+</style>

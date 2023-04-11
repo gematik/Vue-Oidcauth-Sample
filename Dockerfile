@@ -1,4 +1,7 @@
-FROM node:14-alpine
+# docker build -t rp .
+# docker run -p 3000:3000 rp
+
+FROM node:18-alpine
 
 ARG http_proxy_arg=""
 ARG https_proxy_arg=""
@@ -15,14 +18,13 @@ WORKDIR /usr/src/app
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY package*.json ./
-COPY hosts /etc/hosts
 
 RUN npm install
-# If you are building your code for production
-# RUN npm ci --only=production
 
 # Bundle app source
 COPY . .
+
+RUN npm run build
 
 RUN unset HTTP_PROXY
 RUN unset HTTPS_PROXY
@@ -33,5 +35,4 @@ RUN unset NO_PROXY
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-EXPOSE 8090
-CMD [ "npm", "run", "serve" ]
+CMD [ "npm", "run", "start" ]
