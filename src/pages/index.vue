@@ -43,10 +43,6 @@
       <div class="text-center">The Login button will open the resource server.<code>(GET /login)</code></div>
       <div class="text-center">The resource server will redirect to the IdP</div>
       <div class="text-center">The IdP will redirect to the local authenticator</div>
-      <div class="text-center">
-        "Settings-Card type" with entry either "HBA" or "SMC-B" works only for "gem-zidp-login" or "rice-login". It has
-        no impact on "ogr-login
-      </div>
     </div>
   </div>
 </template>
