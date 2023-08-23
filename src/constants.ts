@@ -16,12 +16,8 @@ const runtimeConfig = useRuntimeConfig()
 
 export enum CARD_TYPE {
   HBA = 'HBA',
-  SMCB = 'SMC-B'
-}
-
-export enum SCOPE_TYPES {
-  'HBA' = 'openid gem-auth Person_ID',
-  'SMC-B' = 'openid gem-auth Institutions_ID'
+  SMCB = 'SMC-B',
+  MULTI = 'multi'
 }
 
 /**
@@ -47,7 +43,7 @@ export const DEFAULT_CONFIG = {
   ...runtimeConfig?.public?.defaultConfigs?.DEFAULT_CONFIG
 }
 
-export const DEFAULT_CONFIG_BY_TYPES: Record<string, Record<string, string>> = {
+export const DEFAULT_CONFIG_BY_TYPES: Record<string, Record<string, unknown>> = {
   ...runtimeConfig?.public?.defaultConfigs?.DEFAULT_CONFIG_BY_TYPES
 }
 

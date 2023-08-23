@@ -70,7 +70,7 @@ export default defineComponent({
       useAuthStore().logout()
 
       await useAuthStore().readWellKnown()
-      await this.startAuthFlow()
+      this.startAuthFlow()
     } catch (e) {
       console.log('starting auth flow failed!', e.message)
       if (this.redirectAutomatically) {
@@ -106,7 +106,8 @@ export default defineComponent({
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
         scope: getConfig(CONFIG_KEYS.SCOPE) as string,
-        nonce: createRandomString(16)
+        nonce: createRandomString(16),
+        cardType: getConfig(CONFIG_KEYS.CARD_TYPE_KEY) as string
       } as Record<string, string>
 
       // if redirect_automatically exists in request.query, add it to _query
@@ -120,7 +121,7 @@ export default defineComponent({
       const HOST = getConfig(CONFIG_KEYS.AUTHENTICATOR_HOST_KEY)
       const href = HOST + '?' + challengePath
 
-      // redirect to authenticator with following query params
+      // redirect to authenticator with the following query params
       console.info('Query parameters: ', _query)
       location.href = href
 
@@ -141,7 +142,7 @@ export default defineComponent({
               return response.json()
             } else {
               this.authFlowFailed = true
-              console.log('No token received from authenticator:', err)
+              console.log('No token received from authenticator:', response)
             }
           })
           .then((data) => {
