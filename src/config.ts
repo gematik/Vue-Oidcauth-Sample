@@ -15,10 +15,10 @@
 import { DEFAULT_CONFIG, LOCAL_STORAGE_KEYS } from '@/constants'
 
 // the single source of truth for all config values
-let CONFIG_DATA: Record<string, string> = {}
+let CONFIG_DATA: Record<string, unknown> = {}
 
 // get configs
-export function getConfigs(): Record<string, string> {
+export function getConfigs(): Record<string, unknown> {
   // if there is no config data, load it
   if (Object.keys(CONFIG_DATA).length === 0) {
     loadConfigs()
@@ -27,7 +27,7 @@ export function getConfigs(): Record<string, string> {
   return CONFIG_DATA
 }
 
-export function getConfig(key: string, parseJson = false): string | Record<string, string> | null | boolean {
+export function getConfig(key: string, parseJson = false): unknown {
   // if there is no config data, load it
   if (Object.keys(CONFIG_DATA).length === 0) {
     loadConfigs()
@@ -40,7 +40,7 @@ export function getConfig(key: string, parseJson = false): string | Record<strin
   }
 
   try {
-    return JSON.parse(value)
+    return JSON.parse(value as string)
   } catch (e) {
     return ''
   }
@@ -74,7 +74,7 @@ export function loadConfigs() {
   CONFIG_DATA = DEFAULT_CONFIG
 }
 
-export function saveConfig(configs: { [string: string]: string }) {
+export function saveConfig(configs: { [string: string]: unknown }) {
   localStorage.setItem(LOCAL_STORAGE_KEYS.CONFIGS_LOCAL_STORAGE, JSON.stringify(configs))
   CONFIG_DATA = configs
 }

@@ -4,6 +4,10 @@
 
 # Release Vue-Oidcauth-Sample
 
+## Release 4.6.0
+* Multi card type option implemented
+* Add security policy
+
 ## Release 4.1.0
 * Combined Resource Server & Client
 * Moved from native Vue to Nuxt 3
