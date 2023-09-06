@@ -19,7 +19,6 @@ import {
   CONFIG_KEYS,
   DEFAULT_CONFIG,
   DEFAULT_CONFIG_BY_TYPES,
-  SCOPE_TYPES,
   TConfig,
   TFormInputColumnTypes
 } from '@/constants'
@@ -57,12 +56,6 @@ export default defineComponent({
         key: CONFIG_KEYS.CARD_TYPE_KEY,
         type: TFormInputColumnTypes.dropDown,
         required: true,
-        onChange: (value: CARD_TYPE) => {
-          this.configs = {
-            ...this.configs,
-            [CONFIG_KEYS.SCOPE]: SCOPE_TYPES[value]
-          }
-        },
         options: [
           {
             text: 'HBA',
@@ -71,6 +64,10 @@ export default defineComponent({
           {
             text: 'SMC-B',
             value: CARD_TYPE.SMCB
+          },
+          {
+            text: 'Multi (HBA + SMC-B)',
+            value: CARD_TYPE.MULTI
           }
         ]
       },
