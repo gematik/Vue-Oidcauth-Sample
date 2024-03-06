@@ -34,12 +34,13 @@ const InitialAccessDataState = {
 
 export const useAuthStore = defineStore({
   id: 'authStore',
-  state: () =>
-    ({
+  state: (): IAuthStoreState => {
+    return {
       wellKnownData: null,
       accessData: { ...InitialAccessDataState },
       userData: {}
-    } as IAuthStoreState),
+    }
+  },
   actions: {
     logout() {
       this.accessData = { ...InitialAccessDataState }

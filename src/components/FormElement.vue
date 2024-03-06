@@ -16,7 +16,7 @@
 
 <template>
   <div
-    v-if="hide !== true"
+    v-if="!hide"
     class="form-element-container flex justify-between items-center px-[48px] py-[8px] bg-neutral inner-box-shadow"
   >
     <div class="w-[200px]">
@@ -66,8 +66,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import { TFormInputColumnTypes, TFormInputDropDownOptions, TFormInputDropDownOptionType } from '~/constants'
+import { defineComponent } from 'vue'
+import type { PropType } from 'vue'
+import type { TFormInputColumnTypes, TFormInputDropDownOptions, TFormInputDropDownOptionType } from '~/constants'
 
 export default defineComponent({
   name: 'FormElement',
