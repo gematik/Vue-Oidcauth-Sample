@@ -17,7 +17,7 @@
 <template>
   <div>
     <div class="flex justify-center">
-      <img class="h-28" src="@/assets/logo_gematik.png" />
+      <img class="h-28" src="@/assets/logo_gematik.png" alt="gematik logo" />
     </div>
 
     <slot />

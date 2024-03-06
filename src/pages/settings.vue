@@ -19,7 +19,7 @@ import {
   CONFIG_KEYS,
   DEFAULT_CONFIG,
   DEFAULT_CONFIG_BY_TYPES,
-  TConfig,
+  type TConfig,
   TFormInputColumnTypes
 } from '@/constants'
 
