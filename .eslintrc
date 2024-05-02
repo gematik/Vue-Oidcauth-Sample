@@ -18,5 +18,6 @@
     "vue/singleline-html-element-content-newline": "off",
     "no-console": "off",
     "@typescript-eslint/no-var-requires": "off"
-  }
+  },
+  "ignorePatterns": ["node_modules/", "dist/", ".nuxt/", "coverage/"]
 }
