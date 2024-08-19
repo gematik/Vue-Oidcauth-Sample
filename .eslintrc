@@ -19,5 +19,12 @@
     "no-console": "off",
     "@typescript-eslint/no-var-requires": "off"
   },
-  "ignorePatterns": ["node_modules/", "dist/", ".nuxt/", "coverage/"]
+  "ignorePatterns": ["node_modules/", "dist/", ".nuxt/", "coverage/"],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  }
 }
