@@ -11,9 +11,10 @@ try {
 export default defineNuxtConfig({
   // make src dir source of nuxt
   srcDir: './src',
-  ssr: false,
 
+  ssr: false,
   css: ['~/index.css'],
+
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
@@ -24,9 +25,12 @@ export default defineNuxtConfig({
       }
     ]
   ],
+
   runtimeConfig: {
     public: {
       defaultConfigs
     }
-  }
+  },
+
+  compatibilityDate: '2024-08-14'
 })
