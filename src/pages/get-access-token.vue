@@ -26,16 +26,21 @@
     </div>
 
     <table v-if="accessData.access_token" class="table">
-      <tr>
-        <th class="border border-gray-300">Key</th>
-        <th class="border border-gray-300">Value</th>
-      </tr>
-      <tr v-for="(value, name) in accessData" :key="value">
-        <td class="p-1 border border-gray-300 align-top text-center" style="width: 100px">
-          <strong>{{ name }}:</strong>
-        </td>
-        <td class="p-1 border border-gray-300 break-all">{{ value }}</td>
-      </tr>
+      <thead>
+        <tr>
+          <th class="border border-gray-300">Key</th>
+          <th class="border border-gray-300">Value</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="(value, name) in accessData" :key="value">
+          <td class="p-1 border border-gray-300 align-top text-center" style="width: 100px">
+            <strong>{{ name }}:</strong>
+          </td>
+          <td class="p-1 border border-gray-300 break-all">{{ value }}</td>
+        </tr>
+      </tbody>
     </table>
 
     <div class="text-center">
