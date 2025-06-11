@@ -32,8 +32,7 @@ const InitialAccessDataState = {
   expires_in: 0
 }
 
-export const useAuthStore = defineStore({
-  id: 'authStore',
+export const useAuthStore = defineStore('authStore', {
   state: (): IAuthStoreState => {
     return {
       wellKnownData: null,
