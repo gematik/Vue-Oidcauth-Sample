@@ -87,7 +87,7 @@ See [Configuration Reference](https://nuxt.com/docs/api/configuration/nuxt-confi
 ### Default Config
 
 The `default-configs.yml` file in the root directory contains default configurations for the application. It is possible
-to add custom  settings to the file and these settings will appear on the settings page.
+to add custom settings to the file and these settings will appear on the settings page.
 
 The following is a list of the most commonly used configurations that are contained in the `default-configs.yml` file.
 
@@ -125,6 +125,22 @@ This section of the configuration file contains the default configuration settin
         IDP_HOST: "http://..."
         REDIRECT_URI: "http://.../callback"
         CLIENT_ID: "CLIENT_Y"
+
+### Environment Variables (.env)
+
+You can create a `.env` file in the root directory to configure environment-specific settings. These variables will
+override the default configurations.
+
+- `AUTHENTICATOR_SERVER_URL`: The URL of the authenticator server. This is exposed to the client-side.
+- `PROXY_URL`: The URL for the proxy server. This is a server-side only variable and will be used to make requests to
+  the IDP servers.
+
+Example `.env` file:
+
+```
+AUTHENTICATOR_SERVER_URL=http://localhost:8080
+PROXY_URL=http://localhost:3001
+```
 
 ## Contributing
 

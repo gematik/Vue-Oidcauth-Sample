@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -53,4 +53,10 @@ type TWellKnown = {
   token_endpoint_auth_methods_supported: string[]
   code_challenge_methods_supported: string[]
   kk_app_list_uri: string
+}
+
+type TCheckListItem = {
+  type: 'success' | 'error'
+  title: string
+  text: string
 }

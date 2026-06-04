@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -22,22 +22,36 @@
 
 import { defineStore } from 'pinia'
 import { getConfig } from '~/config'
-import { CONFIG_KEYS } from '~/constants'
+import { CONFIG_KEYS, OFFICIAL_CARD_TYPE } from '~/constants'
 
-type IAuthStoreState = {
+export type IAuthStoreState = {
   userData: Record<string, string>
   accessData: {
-    access_token: string
-    id_token: string
-    expires_in: number
+    [OFFICIAL_CARD_TYPE.HBA]: {
+      access_token: string
+      id_token: string
+      expires_in: number
+    }
+    [OFFICIAL_CARD_TYPE.SMCB]: {
+      access_token: string
+      id_token: string
+      expires_in: number
+    }
   }
   wellKnownData: null | TWellKnown
 }
 
 const InitialAccessDataState = {
-  access_token: '',
-  id_token: '',
-  expires_in: 0
+  [OFFICIAL_CARD_TYPE.HBA]: {
+    access_token: '',
+    id_token: '',
+    expires_in: 0
+  },
+  [OFFICIAL_CARD_TYPE.SMCB]: {
+    access_token: '',
+    id_token: '',
+    expires_in: 0
+  }
 }
 
 export const useAuthStore = defineStore('authStore', {
@@ -49,7 +63,7 @@ export const useAuthStore = defineStore('authStore', {
     }
   },
   actions: {
-    logout() {
+    removeData() {
       this.accessData = { ...InitialAccessDataState }
       this.userData = {}
     },
@@ -57,7 +71,6 @@ export const useAuthStore = defineStore('authStore', {
       try {
         const idpHost = getConfig(CONFIG_KEYS.IDP_HOST)
 
-        // get data with fetch api
         const response = await fetch('/api/get-idp-well-known', {
           method: 'POST',
           body: JSON.stringify({ idpHost }),
@@ -76,7 +89,10 @@ export const useAuthStore = defineStore('authStore', {
         throw err
       }
     },
-    async getAccessData({ codeVerifier, params, redirectUri, clientId }: Record<string, unknown>) {
+    async getAccessData(
+      cardType: OFFICIAL_CARD_TYPE,
+      { codeVerifier, params, redirectUri, clientId }: Record<string, unknown>
+    ) {
       if (!this.wellKnownData) {
         await this.readWellKnown()
       }
@@ -89,7 +105,7 @@ export const useAuthStore = defineStore('authStore', {
         clientId
       }
 
-      this.accessData = await fetch('/api/get-access-data', {
+      this.accessData[cardType] = await fetch('/api/get-access-data', {
         method: 'POST',
         body: JSON.stringify(postData),
         headers: {

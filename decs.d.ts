@@ -22,4 +22,8 @@
 
 declare module 'node-jose/lib/jwe'
 declare module 'node-jose/lib/jwk'
+
+declare module 'node-jose/lib/jwe/index.js'
+declare module 'node-jose/lib/jwk/index.js'
+
 declare module 'js-yaml'

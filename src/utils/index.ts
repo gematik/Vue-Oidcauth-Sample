@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -22,6 +22,48 @@
 
 import cryptoJS from 'crypto-js'
 import base64url from 'base64url'
+import { AUTHENTICATOR_HANDSHAKE } from '~/constants'
+
+/**
+ * URL-encodes an object as a query string, skipping entries whose value is
+ * falsy (empty string, undefined, null). `URLSearchParams` would keep them.
+ */
+export function serializeQuery(obj: Record<string, string | undefined>): string {
+  const parts: string[] = []
+  for (const key in obj) {
+    const value = obj[key]
+    if (value) {
+      parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(value))
+    }
+  }
+  return parts.join('&')
+}
+
+/**
+ * UUID v4 string. Uses `crypto.randomUUID` in secure contexts; falls back to
+ * a `Math.random`-based generator for plain-HTTP non-localhost deployments
+ * (e.g. Citrix) where the WebCrypto API is unavailable.
+ */
+export function generateHandshakeId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
+/**
+ * Fresh random loopback port for a single auth flow, within the band the
+ * Authenticator accepts. Generated per flow and never persisted, so a finished
+ * flow can't be resumed and each flow rebinds the Authenticator's local server.
+ */
+export function createAuthenticatorPort(): number {
+  const { MIN, MAX } = AUTHENTICATOR_HANDSHAKE.PORT_RANGE
+  return Math.floor(Math.random() * (MAX - MIN + 1)) + MIN
+}
 
 /**
  * creates random string

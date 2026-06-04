@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -21,10 +21,13 @@
  */
 
 import base64url from 'base64url'
-import * as JWE from 'node-jose/lib/jwe'
-import * as JWK from 'node-jose/lib/jwk'
+import * as JWE from 'node-jose/lib/jwe/index.js'
+import * as JWK from 'node-jose/lib/jwk/index.js'
+import got from 'got'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 import { createRandomString } from '~/utils'
+import { idpDevAuthHeaders } from '~/server/utils/idp-auth'
 
 type TBody = {
   clientId: string
@@ -40,18 +43,25 @@ type TBody = {
 
 export default defineEventHandler(async (event) => {
   try {
+    const config = useRuntimeConfig()
     const body = (await readBody(event)) as TBody
     const wellKnownData = body.wellKnownData as TWellKnown
 
     // get idp_enc jwk
-    const idpEncJwk: TIdpEncJwk = await fetch(wellKnownData.uri_puk_idp_enc).then((response) => response.json())
+    let agentOption = undefined
+    if (typeof config.proxyUrl === 'string' && config.proxyUrl) {
+      agentOption = { https: new HttpsProxyAgent<string>(config.proxyUrl) }
+    }
+    const idpEncJwk: TIdpEncJwk = await got(wellKnownData.uri_puk_idp_enc, {
+      agent: agentOption,
+      headers: idpDevAuthHeaders(wellKnownData.uri_puk_idp_enc, config.idpDevApiKey)
+    }).json<TIdpEncJwk>()
 
     // get request parameters
     const { tokenKey, params } = await getRequestParameter(body, idpEncJwk)
 
     // get tokens
-    const data = await getTokens(params, tokenKey, wellKnownData)
-    return data
+    return await getTokens(params, tokenKey, wellKnownData, agentOption, config.idpDevApiKey)
   } catch (err) {
     // return http error
     return createError({
@@ -100,17 +110,27 @@ const buildKeyVerifier = async (codeVerifier: string, tokenKey: string, idpEncJw
  * @param params
  * @param tokenKey
  * @param wellKnownData
+ * @param agentOption
+ * @param apiKey
  */
-const getTokens = async (params: URLSearchParams, tokenKey: string, wellKnownData: TWellKnown) => {
+const getTokens = async (
+  params: URLSearchParams,
+  tokenKey: string,
+  wellKnownData: TWellKnown,
+  agentOption?: { https: HttpsProxyAgent<string> },
+  apiKey = ''
+) => {
   try {
-    // send with fetch
-    const response = await fetch(wellKnownData.token_endpoint, {
+    // send with got
+    const response = await got(wellKnownData.token_endpoint, {
       method: 'POST',
-      body: params,
+      body: params.toString(),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    }).then((response) => response.json())
+        'Content-Type': 'application/x-www-form-urlencoded',
+        ...idpDevAuthHeaders(wellKnownData.token_endpoint, apiKey)
+      },
+      agent: agentOption
+    }).json<{ access_token: string; id_token: string; expires_in: number; error?: any }>()
 
     if (response.error) {
       throw response

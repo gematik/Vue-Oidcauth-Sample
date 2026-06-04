@@ -1,5 +1,5 @@
 <!--
-  - Copyright 2025, gematik GmbH
+  - Copyright 2026, gematik GmbH
   -
   - Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
   - European Commission – subsequent versions of the EUPL (the "Licence").
@@ -21,7 +21,7 @@
   -->
 
 <template>
-  <div class="container mx-auto">
+  <div class="container mx-auto bg-white p-5">
     <div v-if="error">
       <h1 class="text-2xl font-normal leading-normal mt-0 mb-2 text-red-700">The authentication was unsuccessful.</h1>
     </div>
@@ -33,7 +33,8 @@
       </h1>
     </div>
 
-    <table v-if="accessData.access_token" class="table">
+    <h2 v-if="accessTokenHBA.access_token" class="text-center my-3 text-3xl">HBA</h2>
+    <table v-if="accessTokenHBA.access_token" class="table" style="margin-bottom: 50px">
       <thead>
         <tr>
           <th class="border border-gray-300">Key</th>
@@ -42,7 +43,26 @@
       </thead>
 
       <tbody>
-        <tr v-for="(value, name) in accessData" :key="value">
+        <tr v-for="(value, name) in accessTokenHBA" :key="value">
+          <td class="p-1 border border-gray-300 align-top text-center" style="width: 100px">
+            <strong>{{ name }}:</strong>
+          </td>
+          <td class="p-1 border border-gray-300 break-all">{{ value }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 v-if="accessTokenSMCB.access_token" class="text-center my-3 text-3xl">SMC-B</h2>
+    <table v-if="accessTokenSMCB.access_token" class="table">
+      <thead>
+        <tr>
+          <th class="border border-gray-300">Key</th>
+          <th class="border border-gray-300">Value</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="(value, name) in accessTokenSMCB" :key="value">
           <td class="p-1 border border-gray-300 align-top text-center" style="width: 100px">
             <strong>{{ name }}:</strong>
           </td>
@@ -67,33 +87,47 @@
 <script lang="ts">
 import Swal from 'sweetalert2'
 import { useAuthStore } from '~/stores/authStore'
-import { CONFIG_KEYS, LOCAL_STORAGE_KEYS } from '~/constants'
+import { CARD_TYPE, CONFIG_KEYS, LOCAL_STORAGE_KEYS, OFFICIAL_CARD_TYPE } from '~/constants'
 import { getConfig } from '~/config'
 
 export default defineComponent({
   name: 'Callback',
+  data() {
+    return {
+      OFFICIAL_CARD_TYPE
+    }
+  },
   computed: {
     error() {
       return this.$route.query.error
     },
-    accessData() {
-      return useAuthStore().accessData
+    accessTokenHBA() {
+      return useAuthStore().accessData[OFFICIAL_CARD_TYPE.HBA]
+    },
+    accessTokenSMCB() {
+      return useAuthStore().accessData[OFFICIAL_CARD_TYPE.SMCB]
     }
   },
   created() {
-    this.getAccessToken()
+    if (this.$route.query[OFFICIAL_CARD_TYPE.HBA] && typeof this.$route.query[OFFICIAL_CARD_TYPE.HBA] === 'string') {
+      this.getAccessToken(OFFICIAL_CARD_TYPE.HBA, JSON.parse(this.$route.query[OFFICIAL_CARD_TYPE.HBA]))
+    }
+
+    if (this.$route.query[OFFICIAL_CARD_TYPE.SMCB] && typeof this.$route.query[OFFICIAL_CARD_TYPE.SMCB] === 'string') {
+      this.getAccessToken(OFFICIAL_CARD_TYPE.SMCB, JSON.parse(this.$route.query[OFFICIAL_CARD_TYPE.SMCB]))
+    }
   },
   methods: {
-    async getAccessToken() {
+    async getAccessToken(cardType: OFFICIAL_CARD_TYPE, cardData: Record<string, string>) {
       const data = {
-        params: { ...this.$route.query },
+        params: { ...cardData },
         codeVerifier: localStorage.getItem(LOCAL_STORAGE_KEYS.CODE_VERIFIER),
         redirectUri: getConfig(CONFIG_KEYS.REDIRECT_URI),
         clientId: getConfig(CONFIG_KEYS.CLIENT_ID)
       }
 
       try {
-        await useAuthStore().getAccessData(data)
+        await useAuthStore().getAccessData(cardType, data)
       } catch (e) {
         await Swal.fire({
           title: 'Error',

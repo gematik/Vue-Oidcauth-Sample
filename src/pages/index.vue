@@ -1,5 +1,5 @@
 <!--
-  - Copyright 2025, gematik GmbH
+  - Copyright 2026, gematik GmbH
   -
   - Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
   - European Commission – subsequent versions of the EUPL (the "Licence").
@@ -19,59 +19,58 @@
   -
   - For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
   -->
+
 <template>
-  <div class="flex flex-col items-center">
-    <h1 class="text-2xl font-normal leading-normal mt-0 mb-2 text-indigo-800">
-      Welcome to the Authenticator Example Application
-    </h1>
-    <div>
-      You are currently: <b>{{ isLoggedIn ? 'Logged in' : 'Logged out' }}</b>
+  <div class="flex flex-col items-center m-4">
+    <div class="mb-3 max-w-6xl">
+      <h2 class="text-3xl tracking-tight text-black sm:text-4xl drop-shadow">{{ i18n.welcome.de }}</h2>
+      <p class="mt-4 text-lg leading-7 text-black">{{ i18n.instructions.de }}</p>
     </div>
-    <div>
-      Protected route:
-      <router-link to="/profile"> Profile </router-link>
-    </div>
-    <div>
-      Settings:
-      <router-link to="/settings"> Settings </router-link>
-    </div>
-    <div class="mt-8">
-      <button
-        v-if="isLoggedIn"
-        class="bg-red-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        @click="logout"
-      >
-        Logout
-      </button>
-      <button v-else class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @click="login">
-        Login
-      </button>
-    </div>
-    <div>
-      <div class="text-center">The Login button will open the resource server.<code>(GET /login)</code></div>
-      <div class="text-center">The resource server will redirect to the IdP</div>
-      <div class="text-center">The IdP will redirect to the local authenticator</div>
+    <div class="options-container">
+      <CardTypeButton :scenario="CARD_TYPE.HBA" :callback="startAuthFlow"></CardTypeButton>
+      <CardTypeButton :scenario="CARD_TYPE.SMCB" :callback="startAuthFlow"></CardTypeButton>
+      <CardTypeButton :scenario="CARD_TYPE.MULTI" :callback="startAuthFlow"></CardTypeButton>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { useAuthStore } from '~/stores/authStore'
+import { CARD_TYPE } from '~/constants'
+import i18nData from '~/assets/i18n.json'
+const i18n = i18nData as Record<string, Record<string, string>>
+
+console.log('custom useRuntimeConfig().public', useRuntimeConfig())
 
 export default defineComponent({
   name: 'Home',
-  computed: {
-    isLoggedIn: function () {
-      return useAuthStore().accessData?.access_token
+  data() {
+    return {
+      CARD_TYPE,
+      i18n
     }
   },
   methods: {
-    logout() {
-      useAuthStore().logout()
-    },
-    login() {
-      this.$router.push({ name: 'authenticator' })
+    startAuthFlow(cardType: string) {
+      this.$router.push({ name: 'authenticator', query: { cardType } })
     }
   }
 })
 </script>
+
+<style>
+.options-container {
+  display: flex;
+  gap: 30px;
+  margin-top: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.text-shadow-white {
+  text-shadow:
+    1px 1px 2px white,
+    0 0 1em white,
+    0 0 0.2em white;
+}
+</style>

@@ -4,6 +4,9 @@
 
 # Release Vue-Oidcauth-Sample
 
+## Release 4.17.0
+* HTTP port-based authenticator flow implemented
+
 ## Release 4.6.0
 * Multi card type option implemented
 * Add security policy

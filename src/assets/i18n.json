@@ -1,0 +1,26 @@
+{
+  "welcome": {
+    "en": "Welcome to the Authenticator Relying Party Test Application",
+    "de": "Willkommen zur gematik Authenticator Testfachanwendung"
+  },
+  "instructions": {
+    "en": "",
+    "de": "Die Anwendung gematik Authenticator Testfachanwendung ermöglicht es Ihnen die Kompatibilität Ihrer Umgebung mit dem Authenticator zu testen. \nDiese Anwendung überprüft, ob eine Anmeldung mit einer HBA oder einer SMC-B erfolgreich durchgeführt werden kann. \nDabei werden sowohl die Funktionalität der Karten als auch mögliche netzwerktechnische Probleme getestet. \nSo stellen wir sicher, dass Ihre Umgebung optimal für den Einsatz unseres Authenticators vorbereitet ist."
+  },
+  "manual": {
+    "en": "Authenticator Manual",
+    "de": "Authenticator Handbuch"
+  },
+  "HBA": {
+    "en": "Info text for the authentication scenario with a HBA (Heilberufsausweis) card. Here could be a description of how the authentication process with a HBA card works or what to consider.",
+    "de": "Überprüfen Sie, ob ein Anmeldeprozess mit Ihrem HBA erfolgreich durchgeführt werden kann. \nStellen Sie sicher, dass alle netzwerktechnischen Anforderungen für eine reibungslose Anmeldung erfüllt sind."
+  },
+  "SMC-B": {
+    "en": "Information about the authentication scenario with a SMC-B card. Here could be a description of how the authentication process with a SMC-B card works or what to consider.",
+    "de": "Überprüfen Sie, ob ein Anmeldeprozess mit Ihrer SMC-B Karte erfolgreich durchgeführt werden kann.\nStellen Sie sicher, dass alle netzwerktechnischen Anforderungen für eine reibungslose Anmeldung erfüllt sind."
+  },
+  "multi": {
+    "en": "Here is a text about the multi method, if multiple cards are inserted or other information that seems important.",
+    "de": "Überprüfen Sie, ob ein Anmeldeprozess mit SMC-B Karte oder HBA erfolgreich durchgeführt werden kann.\nStellen Sie sicher, dass alle netzwerktechnischen Anforderungen für eine reibungslose Anmeldung erfüllt sind."
+  }
+}
