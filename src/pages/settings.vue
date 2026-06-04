@@ -1,5 +1,5 @@
 <!--
-  - Copyright 2025, gematik GmbH
+  - Copyright 2026, gematik GmbH
   -
   - Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
   - European Commission – subsequent versions of the EUPL (the "Licence").
@@ -19,18 +19,11 @@
   -
   - For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
   -->
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { getConfigs, saveConfig } from '@/config'
-import {
-  CARD_TYPE,
-  CONFIG_KEYS,
-  DEFAULT_CONFIG,
-  DEFAULT_CONFIG_BY_TYPES,
-  type TConfig,
-  TFormInputColumnTypes
-} from '@/constants'
-
+import { CONFIG_KEYS, DEFAULT_CONFIG, DEFAULT_CONFIG_BY_TYPES, type TConfig, TFormInputColumnTypes } from '@/constants'
 export default defineComponent({
   name: 'Settings',
   data() {
@@ -54,38 +47,6 @@ export default defineComponent({
         required: true
       },
       {
-        label: 'Authenticator Host',
-        key: CONFIG_KEYS.AUTHENTICATOR_HOST_KEY,
-        type: TFormInputColumnTypes.input,
-        required: true
-      },
-      {
-        label: 'Card Type',
-        key: CONFIG_KEYS.CARD_TYPE_KEY,
-        type: TFormInputColumnTypes.dropDown,
-        required: true,
-        options: [
-          {
-            text: 'HBA',
-            value: CARD_TYPE.HBA
-          },
-          {
-            text: 'SMC-B',
-            value: CARD_TYPE.SMCB
-          },
-          {
-            text: 'Multi (HBA + SMC-B)',
-            value: CARD_TYPE.MULTI
-          }
-        ]
-      },
-      {
-        label: 'IdP Scope',
-        key: CONFIG_KEYS.SCOPE,
-        type: TFormInputColumnTypes.input,
-        required: true
-      },
-      {
         label: 'Redirect Automatically',
         key: CONFIG_KEYS.REDIRECT_AUTOMATICALLY_KEY,
         type: TFormInputColumnTypes.dropDown,
@@ -102,6 +63,12 @@ export default defineComponent({
   methods: {
     save() {
       saveConfig(this.configs)
+      this.$toast.open({
+        message: 'Einstellungen gespeichert',
+        type: 'success',
+        position: 'top',
+        duration: 3000
+      })
       this.$router.push('/')
     },
     saveDefaultConfig(defaultConfigType: string) {
@@ -113,7 +80,7 @@ export default defineComponent({
 
 <template>
   <div class="flex flex-col items-center">
-    <h1 class="text-2xl font-normal leading-normal mt-0 mb-2 text-indigo-800">Settings</h1>
+    <h1 class="text-3xl tracking-tight text-black sm:text-4xl drop-shadow mb-3">Settings</h1>
 
     <div class="flex flex-row flex-wrap justify-center">
       <button

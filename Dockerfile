@@ -1,7 +1,7 @@
 # docker build -t rp .
 # docker run -p 3000:3000 rp
 
-FROM node:18-alpine
+FROM node:22-alpine
 
 ARG http_proxy_arg=""
 ARG https_proxy_arg=""
@@ -17,7 +17,9 @@ WORKDIR /usr/src/app
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
-COPY package*.json ./
+COPY package.json ./
+COPY patches ./patches
+COPY .npmrc .npmrc
 
 RUN npm install
 
@@ -32,7 +34,7 @@ RUN unset NO_PROXY
 
 # Use non-root user to secure container
 # Create a group and user and Tell docker that all future commands should run as the appuser user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+#RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+#USER appuser
 
 CMD [ "npm", "run", "start" ]

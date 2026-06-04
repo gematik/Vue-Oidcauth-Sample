@@ -20,21 +20,16 @@
  * For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
  */
 
-import type { CARD_TYPE } from '~/constants'
+const IDP_DEV_HOST = 'idp.dev.gematik.solutions'
 
-/**
- * This variable contains reply objects of /check-auth-code route. {[state]: replayObject}
- * When we receive a /callback request with same state, it will replay the /check-auth-code request with code/token
- *
- */
-const awaitingTokenSessions: Record<
-  string,
-  {
-    cardType: CARD_TYPE
-    resolve: typeof Promise.resolve
-    [CARD_TYPE.HBA]?: string
-    [CARD_TYPE.SMCB]?: string
+// Dev IDP requires an X-Authorization API key on outbound requests.
+export function idpDevAuthHeaders(url: string, apiKey: string): Record<string, string> {
+  try {
+    if (apiKey && new URL(url).hostname === IDP_DEV_HOST) {
+      return { 'X-Authorization': apiKey }
+    }
+  } catch {
+    // ignore malformed URL
   }
-> = {}
-
-export default awaitingTokenSessions
+  return {}
+}

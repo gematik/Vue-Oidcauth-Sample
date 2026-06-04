@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -20,18 +20,11 @@
  * For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
  */
 
-export default defineEventHandler(async (event) => {
-  try {
-    const body = await readBody(event)
-    const idpHost = body.idpHost
+// plugins/toast.js
+import { defineNuxtPlugin } from '#app'
+import ToastPlugin from 'vue-toast-notification'
+import 'vue-toast-notification/dist/theme-bootstrap.css'
 
-    const wellKnown = await fetch(`${idpHost}/.well-known/openid-configuration`)
-
-    return await wellKnown.text()
-  } catch (e) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify(e)
-    }
-  }
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.use(ToastPlugin)
 })

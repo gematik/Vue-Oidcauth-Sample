@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -21,22 +21,46 @@
  */
 
 import awaitingTokenSessions from '~/server/awaiting-token-sessions'
+import { CARD_TYPE } from '~/constants'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event)
     const state = query.state || ''
+    const cardType: CARD_TYPE = query.cardType as CARD_TYPE
 
-    if (typeof state === 'string') {
+    if (state) {
       // response the client for awaiting check-auth-token request and return data
-      const resolveFnFromCheckAuthCodeEndpointForState = awaitingTokenSessions[state]
+      const resolveObject = awaitingTokenSessions[state as string]
 
-      // if it is not null, we have a reply object for this state
-      if (resolveFnFromCheckAuthCodeEndpointForState) {
-        resolveFnFromCheckAuthCodeEndpointForState(query)
-
-        delete awaitingTokenSessions[state]
+      // No awaiting session → the browser landed here via the HTTP-port 302 (not
+      // the legacy server-side DIRECT callback). Forward to the /callback page so
+      // the SPA navigation flow (advanceFlow) can take over.
+      if (!resolveObject) {
+        return sendRedirect(event, '/callback' + getRequestURL(event).search, 302)
       }
+
+      if (resolveObject.cardType == CARD_TYPE.MULTI) {
+        if (cardType === CARD_TYPE.HBA || cardType === CARD_TYPE.SMCB) {
+          resolveObject[cardType] = JSON.stringify(query)
+        }
+
+        if (resolveObject[CARD_TYPE.HBA] && resolveObject[CARD_TYPE.SMCB]) {
+          // resolve the promise with both card types
+          await resolveObject.resolve({
+            [CARD_TYPE.HBA]: resolveObject[CARD_TYPE.HBA],
+            [CARD_TYPE.SMCB]: resolveObject[CARD_TYPE.SMCB]
+          })
+        } else {
+          return
+        }
+      } else {
+        await resolveObject.resolve({
+          [resolveObject.cardType]: JSON.stringify(query)
+        })
+      }
+
+      delete awaitingTokenSessions[state as string]
     } else {
       console.error('missing state in query')
     }

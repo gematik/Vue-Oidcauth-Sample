@@ -1,5 +1,5 @@
 <!--
-  - Copyright 2025, gematik GmbH
+  - Copyright 2026, gematik GmbH
   -
   - Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
   - European Commission – subsequent versions of the EUPL (the "Licence").
@@ -22,16 +22,33 @@
 
 <template>
   <div class="text-center">
-    <div v-if="redirectAutomatically">
+    <div v-if="loading" class="pointer-events-none select-none" aria-busy="true" aria-live="polite">
+      <h1 class="text-3xl tracking-tight text-black sm:text-4xl drop-shadow">
+        {{ phase === 'signing' ? 'Anmeldung im Authenticator bestätigen...' : 'Authenticator wird gestartet...' }}
+      </h1>
+      <p class="mt-4" style="font-size: 18px">
+        {{
+          phase === 'signing'
+            ? 'Bitte PIN eingeben und die Karte bestätigen. Diese Seite wird automatisch weitergeleitet.'
+            : 'Bitte warten, die Verbindung zum Authenticator wird aufgebaut.'
+        }}
+      </p>
+      <p v-if="totalCards > 1" class="mt-2" style="font-size: 16px">
+        Karte {{ cardIndex }} von {{ totalCards }}
+      </p>
+      <br />
+      <span class="loader" />
+    </div>
+    <div v-else-if="redirectAutomatically">
       <div v-if="!authFlowFailed">
         <h1 style="font-size: 32px">Auth Flow is in progress</h1>
-        <p style="font-size: 18px">Do not close this tab and wait until it redirects!</p>
+        <p class="mt-4" style="font-size: 18px">Do not close this tab and wait until it redirects!</p>
         <br />
         <span class="loader" />
       </div>
       <div v-else>
         <div style="font-size: 100px">⚠</div>
-        <h1 style="font-size: 32px">Auth Flow has failed. Please restart!</h1>
+        <h1 class="mt-4" style="font-size: 32px">Auth Flow has failed. Please restart!</h1>
         <br />
         <button
           class="shadow-xl bg-blue-500 hover:bg-green-600 text-white font-bold py-3 px-3 rounded"
@@ -42,14 +59,7 @@
       </div>
     </div>
     <div v-else>
-      <h1 style="font-size: 32px">Auth Flow has started!</h1>
-      <p style="font-size: 18px">The Authenticator App will open a new tab. You can close this tab safely.</p>
-      <button
-        class="shadow-xl bg-blue-500 hover:bg-green-600 text-white font-bold py-3 px-3 rounded my-5 min-w-[200px]"
-        @click="window.close()"
-      >
-        Close
-      </button>
+      <h1 class="text-3xl tracking-tight text-black sm:text-4xl drop-shadow">Auth Flow has started!</h1>
       <br />
       <nuxt-link class="text-blue-500 font-normal cursor-pointer" @click="$router.back()"> Go Back </nuxt-link>
     </div>
@@ -59,28 +69,75 @@
 <script lang="ts">
 import Swal from 'sweetalert2'
 
-import { CONFIG_KEYS, LOCAL_STORAGE_KEYS } from '@/constants'
+import { AUTHENTICATOR_HANDSHAKE, CARD_TYPE, CONFIG_KEYS, LOCAL_STORAGE_KEYS, OFFICIAL_CARD_TYPE } from '@/constants'
 import { getConfig } from '@/config'
-import { createCodeChallenge, createRandomString } from '~/utils'
+import {
+  createAuthenticatorPort,
+  createCodeChallenge,
+  createRandomString,
+  generateHandshakeId,
+  serializeQuery
+} from '~/utils'
 import { useAuthStore } from '~/stores/authStore'
+import { buildAuthRequestUrl, buildAuthenticatorDeeplink, probeAuthenticator } from '~/lib/authenticator-handshake'
+import {
+  type AuthFlowSession,
+  clearFlowSession,
+  isFlowActive,
+  readFlowSession,
+  writeFlowSession
+} from '~/lib/auth-flow-session'
+
+const { PROBE_DEADLINE_MS, PROBE_INTERVAL_MS } = AUTHENTICATOR_HANDSHAKE
+
+function buildOAuthChallengeQuery(opts: {
+  state: string
+  cardType: string
+  codeChallenge: string
+  withDirectCallback: boolean
+}): Record<string, string> {
+  const query: Record<string, string> = {
+    client_id: getConfig(CONFIG_KEYS.CLIENT_ID) as string,
+    response_type: 'code',
+    redirect_uri: getConfig(CONFIG_KEYS.REDIRECT_URI) as string,
+    state: opts.state,
+    code_challenge: opts.codeChallenge,
+    code_challenge_method: 'S256',
+    scope: 'openid gem-auth',
+    nonce: createRandomString(16),
+    cardType: opts.cardType
+  }
+  if (opts.withDirectCallback) {
+    query.callback = 'DIRECT'
+  }
+  return query
+}
 
 export default defineComponent({
   data() {
     return {
       redirectAutomatically: getConfig(CONFIG_KEYS.REDIRECT_AUTOMATICALLY_KEY, true),
       authFlowFailed: false,
-      abortController: null as null | AbortController
+      loading: false,
+      // 'starting' = waiting for GET /status; 'signing' = navigated to GET / (PIN entry on the Authenticator).
+      phase: 'starting' as 'starting' | 'signing',
+      // 1-based. Drives the "Karte X von N" hint.
+      cardIndex: 1,
+      totalCards: 1,
+      abortController: null as null | AbortController,
+      probeAbortController: null as null | AbortController
     }
   },
   async created() {
     try {
       // first clear store
-      useAuthStore().logout()
+      useAuthStore().removeData()
 
       await useAuthStore().readWellKnown()
-      this.startAuthFlow()
+      await this.startOrResumeFlow()
     } catch (e) {
-      console.log('starting auth flow failed!', e.message)
+      console.error('starting auth flow failed!', e.message)
+      this.loading = false
       if (this.redirectAutomatically) {
         this.authFlowFailed = true
       } else {
@@ -95,56 +152,129 @@ export default defineComponent({
     }
   },
   unmounted() {
-    // abort fetch request if user leaves page
+    // abort in-flight probe / legacy polling if the user leaves the page
     this.abortController?.abort()
+    this.probeAbortController?.abort()
   },
+
   methods: {
-    startAuthFlow() {
-      const codeVerifier = createRandomString(64)
+    // Fresh entry (?cardType=…) starts a new flow; ?resume=1 continues the
+    // multi-card flow persisted in sessionStorage after the previous card's
+    // 302 → /callback round-trip (the SPA fully reloads in between).
+    async startOrResumeFlow() {
+      const existing = readFlowSession()
+      const resume = this.$route.query.resume === '1' && isFlowActive(existing)
+
+      let session: AuthFlowSession
+      if (resume) {
+        session = existing as AuthFlowSession
+      } else {
+        clearFlowSession()
+        const cardTypeParam = this.$route.query.cardType as string
+        // 'multi' → HBA + SMC-B sequentially; otherwise a single card.
+        const cardTypes: string[] =
+          cardTypeParam === CARD_TYPE.MULTI ? [OFFICIAL_CARD_TYPE.HBA, OFFICIAL_CARD_TYPE.SMCB] : [cardTypeParam]
+
+        // ONE codeVerifier shared across cards — matches what /get-access-token expects.
+        const codeVerifier = createRandomString(64)
+        localStorage.setItem(LOCAL_STORAGE_KEYS.CODE_VERIFIER, codeVerifier)
+        localStorage.setItem(LOCAL_STORAGE_KEYS.CARD_TYPE, cardTypeParam)
+
+        session = {
+          flowId: generateHandshakeId(),
+          cardTypeParam,
+          cards: cardTypes.map((ct) => ({ cardType: ct, state: createRandomString(16) })),
+          cursor: 0,
+          redirectAutomatically: Boolean(this.redirectAutomatically)
+        }
+        writeFlowSession(session)
+      }
+
+      this.totalCards = session.cards.length
+      this.cardIndex = session.cursor + 1
+      this.loading = true
+      this.phase = 'starting'
+
+      await this.startCard(session)
+    },
+
+    // Fires the deeplink, probes /status until ready, then NAVIGATES the browser
+    // to GET /authorize (the page unloads; the result returns as a 302 → /callback).
+    // Fresh (port, handshake_id) per card — each card is its own transport flow.
+    async startCard(session: AuthFlowSession) {
+      const slot = session.cards[session.cursor]
+      const codeVerifier = localStorage.getItem(LOCAL_STORAGE_KEYS.CODE_VERIFIER) as string
       const codeChallenge = createCodeChallenge(codeVerifier)
 
-      // save verifier and codeChallenge in local storage
-      localStorage.setItem(LOCAL_STORAGE_KEYS.CODE_VERIFIER, codeVerifier)
+      // The FIRST request carries the original cardType (e.g. 'multi'), so the
+      // deeplink is the market-standard legacy challenge: an old Authenticator
+      // starts the full flow straight from it, a new one ignores it and waits
+      // for GET /authorize. Subsequent cards address the specific remaining card.
+      const cardType = session.cursor === 0 ? session.cardTypeParam : slot.cardType
 
-      const _query = {
-        client_id: getConfig(CONFIG_KEYS.CLIENT_ID) as string,
-        response_type: 'code',
-        redirect_uri: getConfig(CONFIG_KEYS.REDIRECT_URI) as string,
-        state: createRandomString(16),
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
-        scope: getConfig(CONFIG_KEYS.SCOPE) as string,
-        nonce: createRandomString(16),
-        cardType: getConfig(CONFIG_KEYS.CARD_TYPE_KEY) as string
-      } as Record<string, string>
+      const challengeQuery = buildOAuthChallengeQuery({
+        state: slot.state,
+        cardType,
+        codeChallenge,
+        // Keep the deeplink byte-for-byte backward compatible: same callback the
+        // legacy flow uses. Inert for the server flow (it answers via 302).
+        withDirectCallback: session.redirectAutomatically
+      })
+      const authorizationEndpoint = useAuthStore().wellKnownData?.authorization_endpoint
+      const challengePath = authorizationEndpoint + '?' + serializeQuery(challengeQuery)
 
-      // if redirect_automatically exists in request.query, add it to _query
-      if (getConfig(CONFIG_KEYS.REDIRECT_AUTOMATICALLY_KEY, true)) {
-        _query.callback = 'DIRECT'
+      // Fresh random port + handshake_id per card → nothing is listening yet.
+      const port = createAuthenticatorPort()
+      const handshakeId = generateHandshakeId()
+
+      // Fire the deeplink. On an OLD Authenticator this single deeplink already
+      // starts the flow (it parses challenge_path); on a NEW one it only starts
+      // the HTTP server and waits for the GET /authorize navigation below.
+      location.href = buildAuthenticatorDeeplink(challengePath, port, handshakeId)
+
+      this.probeAbortController = new AbortController()
+      const probeResult = await probeAuthenticator({
+        port,
+        deadlineMs: Date.now() + PROBE_DEADLINE_MS,
+        intervalMs: PROBE_INTERVAL_MS,
+        signal: this.probeAbortController.signal
+      })
+
+      if (!probeResult.ready) {
+        if (probeResult.reason === 'aborted') {
+          return
+        }
+        // Old Authenticator (no server mode): the deeplink above ALREADY started
+        // the legacy flow — do not fire a second one, just await its result.
+        this.fallbackToLegacy(session, slot.state)
+        return
       }
 
-      const authorizationEndpoint = useAuthStore().wellKnownData?.authorization_endpoint
-      const challengePath = 'challenge_path=' + authorizationEndpoint + '?' + this.serialize(_query)
+      // Ready → top-level navigation. The Authenticator holds it open through
+      // card + PIN and finally answers with a 302 to redirect_uri (→ /callback).
+      this.phase = 'signing'
+      window.location.assign(buildAuthRequestUrl(port, challengePath, handshakeId))
+    },
 
-      const HOST = getConfig(CONFIG_KEYS.AUTHENTICATOR_HOST_KEY)
-      const href = HOST + '?' + challengePath
-
-      // redirect to authenticator with the following query params
-      console.info('Query parameters: ', _query)
-      location.href = href
-
-      if (this.redirectAutomatically) {
-        console.log('waiting for redirect automatically...')
-        this.startAutoRedirectAwaitForToken(_query.state)
+    fallbackToLegacy(session: AuthFlowSession, state: string) {
+      // No server mode: the deeplink fired in startCard was the market-standard
+      // legacy challenge, so the flow ALREADY started there. Firing a second
+      // deeplink would start a duplicate flow — instead just abandon the server
+      // state machine and await the legacy result (DIRECT polling when auto).
+      clearFlowSession()
+      this.loading = false
+      if (session.redirectAutomatically) {
+        this.startAutoRedirectAwaitForToken(state, session.cardTypeParam)
       }
     },
-    startAutoRedirectAwaitForToken(state: string) {
-      // Start waiting for the result of the auth flow process
+
+    startAutoRedirectAwaitForToken(state: string, cardTypeParam: string) {
+      // Wait for the auth flow result via DIRECT-callback polling (legacy path).
       if (this.redirectAutomatically) {
         this.abortController = new AbortController()
         const signal = this.abortController.signal
 
-        fetch('/api/check-auth-code' + '?state=' + state, { signal })
+        fetch('/api/check-auth-code' + '?state=' + state + '&cardType=' + cardTypeParam, { signal })
           .then((response) => {
             if (response.ok) {
               return response.json()
@@ -154,22 +284,13 @@ export default defineComponent({
             }
           })
           .then((data) => {
-            useRouter().push('/callback?' + this.serialize(data))
+            useRouter().push('/callback?' + serializeQuery(data))
           })
           .catch((err) => {
             this.authFlowFailed = true
             console.log('No token received from authenticator:', err)
           })
       }
-    },
-    serialize(obj: Record<string, string>) {
-      const str = []
-      for (const p in obj) {
-        if (obj[p]) {
-          str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]))
-        }
-      }
-      return str.join('&')
     }
   }
 })

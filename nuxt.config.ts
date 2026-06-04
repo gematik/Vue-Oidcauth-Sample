@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -33,26 +33,21 @@ try {
 export default defineNuxtConfig({
   // make src dir source of nuxt
   srcDir: './src',
-
+  serverDir: './src/server',
   ssr: false,
   css: ['~/index.css'],
-
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@pinia/nuxt',
-    [
-      '@nuxtjs/eslint-module',
-      {
-        failOnError: true
-      }
-    ]
-  ],
-
+  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
+  plugins: [{ src: '~/plugins/toast.js', mode: 'client' }],
+  build: {
+    transpile: [/^vue-toast-notification/]
+  },
   runtimeConfig: {
+    proxyUrl: process.env.NUXT_PROXY_URL || '',
+    idpDevApiKey: process.env.IDP_DEV_API_KEY || '',
     public: {
+      authenticatorServerUrl: process.env.NUXT_PUBLIC_AUTHENTICATOR_SERVER_URL || '',
       defaultConfigs
     }
   },
-
-  compatibilityDate: '2024-08-14'
+  compatibilityDate: '2025-08-18'
 })

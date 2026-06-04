@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, gematik GmbH
+ * Copyright 2026, gematik GmbH
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
  * European Commission – subsequent versions of the EUPL (the "Licence").
@@ -21,6 +21,7 @@
  */
 
 import awaitingTokenSessions from '~/server/awaiting-token-sessions'
+import type { CARD_TYPE } from '~/constants'
 
 /**
  * Relying-Party (Client) checks if there is a token specified for the processing state.
@@ -36,15 +37,18 @@ export default defineEventHandler(async (event) => {
     // We save the resolve object in the awaitingTokenSessions object. When we receive the callback request from the
     // authenticator, we will resolve this promise.
     return await new Promise((resolve, reject) => {
-      if (typeof state === 'string') {
-        awaitingTokenSessions[state] = resolve
+      if (state) {
+        awaitingTokenSessions[state as string] = {
+          cardType: query.cardType as CARD_TYPE,
+          resolve: resolve as typeof Promise.resolve
+        }
       }
 
       setTimeout(() => {
         // after 30 seconds no request received from the authenticator. We throw an error!
-        if (typeof state === 'string' && awaitingTokenSessions[state]) {
+        if (state && awaitingTokenSessions[state as string]) {
           // delete the reply object in any case and save memory
-          delete awaitingTokenSessions[state]
+          delete awaitingTokenSessions[state as string]
 
           // resolve this promise with reject
           return reject(new Error('No request received from the authenticator!'))

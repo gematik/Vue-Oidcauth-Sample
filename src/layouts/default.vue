@@ -1,5 +1,5 @@
 <!--
-  - Copyright 2025, gematik GmbH
+  - Copyright 2026, gematik GmbH
   -
   - Licensed under the EUPL, Version 1.2 or - as soon they will be approved by the
   - European Commission – subsequent versions of the EUPL (the "Licence").
@@ -20,15 +20,19 @@
   - For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
   -->
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import MainNavigation from '~/components/MainNavigation.vue'
+import MainFooter from '~/components/MainFooter.vue'
+</script>
 
 <template>
-  <div>
-    <div class="flex justify-center">
-      <img class="h-28" src="@/assets/logo_gematik.png" alt="gematik logo" />
+  <div class="flex flex-col min-h-screen">
+    <MainNavigation />
+    <div class="bg"></div>
+    <div class="flex-grow mt-12">
+      <slot />
     </div>
-
-    <slot />
+    <MainFooter />
   </div>
 </template>
 
