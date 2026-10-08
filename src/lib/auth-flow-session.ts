@@ -43,6 +43,10 @@ export interface AuthFlowSession {
   // Index of the card currently being processed (0-based).
   cursor: number
   redirectAutomatically: boolean
+  // Pure v5 flow: deeplink carries only server_port + handshake_id (no
+  // challenge_path), and probe timeout fails hard instead of falling back to
+  // the legacy DIRECT-polling path.
+  pureV5?: boolean
 }
 
 const KEY = 'authenticator.flow'

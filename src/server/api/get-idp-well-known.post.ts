@@ -21,6 +21,8 @@
  */
 
 import got from 'got'
+import { isError } from 'h3'
+import { validateUrl, buildWellKnownUrl } from '~/server/utils/ssrf-validator';
 import { HttpsProxyAgent } from 'https-proxy-agent'
 
 import { idpDevAuthHeaders } from '~/server/utils/idp-auth'
@@ -29,13 +31,13 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
     const body = await readBody(event)
-    const idpHost = body.idpHost
+    const idpHost = validateUrl(body.idpHost)
 
     let agentOption = undefined
     if (typeof config.proxyUrl === 'string' && config.proxyUrl) {
       agentOption = { https: new HttpsProxyAgent(config.proxyUrl) }
     }
-    const wellKnownUrl = `${idpHost}/.well-known/openid-configuration`
+    const wellKnownUrl = buildWellKnownUrl(idpHost)
     const wellKnown = await got(wellKnownUrl, {
       agent: agentOption,
       headers: idpDevAuthHeaders(wellKnownUrl, config.idpDevApiKey)
@@ -43,6 +45,14 @@ export default defineEventHandler(async (event) => {
 
     return wellKnown.body
   } catch (e) {
+    // SSRF validation (validateUrl) rejects the configured host with a 403 H3Error.
+    // Propagate it unchanged so the real status/message reaches the client instead
+    // of being flattened into a generic 500 below.
+    if (isError(e) && e.statusCode === 403) {
+      console.error('get-idp-well-known failed:', e.statusCode, e.statusMessage)
+      return e
+    }
+
     const err = e as { message?: string; response?: { statusCode?: number; body?: unknown } }
     // got errors carry a circular agent ref — log the reason, never JSON.stringify the raw error.
     console.error(

@@ -27,9 +27,9 @@
       <p class="mt-4 text-lg leading-7 text-black">{{ i18n.instructions.de }}</p>
     </div>
     <div class="options-container">
-      <CardTypeButton :scenario="CARD_TYPE.HBA" :callback="startAuthFlow"></CardTypeButton>
-      <CardTypeButton :scenario="CARD_TYPE.SMCB" :callback="startAuthFlow"></CardTypeButton>
-      <CardTypeButton :scenario="CARD_TYPE.MULTI" :callback="startAuthFlow"></CardTypeButton>
+      <CardTypeButton :scenario="CARD_TYPE.HBA" :callback="startAuthFlow" :v5-callback="startV5AuthFlow"></CardTypeButton>
+      <CardTypeButton :scenario="CARD_TYPE.SMCB" :callback="startAuthFlow" :v5-callback="startV5AuthFlow"></CardTypeButton>
+      <CardTypeButton :scenario="CARD_TYPE.MULTI" :callback="startAuthFlow" :v5-callback="startV5AuthFlow"></CardTypeButton>
     </div>
   </div>
 </template>
@@ -52,6 +52,9 @@ export default defineComponent({
   methods: {
     startAuthFlow(cardType: string) {
       this.$router.push({ name: 'authenticator', query: { cardType } })
+    },
+    startV5AuthFlow(cardType: string) {
+      this.$router.push({ name: 'authenticator', query: { cardType, flow: 'v5' } })
     }
   }
 })

@@ -62,6 +62,24 @@ export function buildAuthenticatorDeeplink(challengePath: string, port: number, 
   )
 }
 
+// Pure v5 deeplink: only the transport params at the top level. The challenge
+// URL is NOT embedded in the deeplink — it arrives via GET /authorize. An old
+// Authenticator that ignores top-level server_port has nothing to act on, so
+// the caller must not fall back to a legacy path here.
+export function buildV5Deeplink(port: number, handshakeId: string): string {
+  return (
+    DEEPLINK_PROTOCOL +
+    '?' +
+    QUERY_PARAMS.SERVER_PORT +
+    '=' +
+    port +
+    '&' +
+    QUERY_PARAMS.HANDSHAKE_ID +
+    '=' +
+    handshakeId
+  )
+}
+
 export type ProbeResult = { ready: true } | { ready: false; reason: 'timeout' | 'aborted' }
 
 export interface ProbeOptions {

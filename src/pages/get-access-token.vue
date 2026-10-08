@@ -131,7 +131,7 @@ export default defineComponent({
       } catch (e) {
         await Swal.fire({
           title: 'Error',
-          text: e?.response?.data?.message || 'Something went wrong',
+          text: e?.message || 'Something went wrong',
           icon: 'error',
           confirmButtonText: 'Ok'
         })

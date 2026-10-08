@@ -79,7 +79,12 @@ import {
   serializeQuery
 } from '~/utils'
 import { useAuthStore } from '~/stores/authStore'
-import { buildAuthRequestUrl, buildAuthenticatorDeeplink, probeAuthenticator } from '~/lib/authenticator-handshake'
+import {
+  buildAuthRequestUrl,
+  buildAuthenticatorDeeplink,
+  buildV5Deeplink,
+  probeAuthenticator
+} from '~/lib/authenticator-handshake'
 import {
   type AuthFlowSession,
   clearFlowSession,
@@ -143,7 +148,7 @@ export default defineComponent({
       } else {
         await Swal.fire({
           title: 'Auth Flow has failed!',
-          text: 'Please try again!',
+          text: e?.message || 'Please try again!',
           icon: 'error',
           confirmButtonText: 'Ok'
         })
@@ -185,7 +190,8 @@ export default defineComponent({
           cardTypeParam,
           cards: cardTypes.map((ct) => ({ cardType: ct, state: createRandomString(16) })),
           cursor: 0,
-          redirectAutomatically: Boolean(this.redirectAutomatically)
+          redirectAutomatically: Boolean(this.redirectAutomatically),
+          pureV5: this.$route.query.flow === 'v5'
         }
         writeFlowSession(session)
       }
@@ -216,9 +222,10 @@ export default defineComponent({
         state: slot.state,
         cardType,
         codeChallenge,
-        // Keep the deeplink byte-for-byte backward compatible: same callback the
-        // legacy flow uses. Inert for the server flow (it answers via 302).
-        withDirectCallback: session.redirectAutomatically
+        // Hybrid flow keeps the deeplink byte-for-byte legacy-compatible (same
+        // DIRECT callback). Pure v5 never falls back to legacy, so the DIRECT
+        // hint would be misleading.
+        withDirectCallback: session.redirectAutomatically && !session.pureV5
       })
       const authorizationEndpoint = useAuthStore().wellKnownData?.authorization_endpoint
       const challengePath = authorizationEndpoint + '?' + serializeQuery(challengeQuery)
@@ -227,10 +234,13 @@ export default defineComponent({
       const port = createAuthenticatorPort()
       const handshakeId = generateHandshakeId()
 
-      // Fire the deeplink. On an OLD Authenticator this single deeplink already
-      // starts the flow (it parses challenge_path); on a NEW one it only starts
-      // the HTTP server and waits for the GET /authorize navigation below.
-      location.href = buildAuthenticatorDeeplink(challengePath, port, handshakeId)
+      // Fire the deeplink. Pure v5 carries ONLY server_port + handshake_id, so
+      // an old Authenticator that ignores top-level transport params has nothing
+      // to act on (intentional — caller must not legacy-fallback). Hybrid embeds
+      // the full challenge_path so an old build can still start the flow alone.
+      location.href = session.pureV5
+        ? buildV5Deeplink(port, handshakeId)
+        : buildAuthenticatorDeeplink(challengePath, port, handshakeId)
 
       this.probeAbortController = new AbortController()
       const probeResult = await probeAuthenticator({
@@ -244,8 +254,16 @@ export default defineComponent({
         if (probeResult.reason === 'aborted') {
           return
         }
-        // Old Authenticator (no server mode): the deeplink above ALREADY started
-        // the legacy flow — do not fire a second one, just await its result.
+        if (session.pureV5) {
+          // Pure v5: the deeplink had no challenge_path, so an old Authenticator
+          // can't have started anything. There is nothing to await — fail clean.
+          clearFlowSession()
+          this.loading = false
+          this.authFlowFailed = true
+          return
+        }
+        // Hybrid: the deeplink above ALREADY started the legacy flow on an old
+        // Authenticator — do not fire a second one, just await its result.
         this.fallbackToLegacy(session, slot.state)
         return
       }

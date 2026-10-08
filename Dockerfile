@@ -14,14 +14,12 @@ ENV NO_PROXY=$noproxy_arg
 # Create app directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package.json ./
+# Install app dependencies exactly as locked
+COPY package.json package-lock.json ./
 COPY patches ./patches
 COPY .npmrc .npmrc
 
-RUN npm install
+RUN npm ci
 
 # Bundle app source
 COPY . .
