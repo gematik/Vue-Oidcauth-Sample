@@ -24,9 +24,11 @@ import base64url from 'base64url'
 import * as JWE from 'node-jose/lib/jwe/index.js'
 import * as JWK from 'node-jose/lib/jwk/index.js'
 import got from 'got'
+import { isError } from 'h3'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 
 import { createRandomString } from '~/utils'
+import { validateUrl } from '~/server/utils/ssrf-validator';
 import { idpDevAuthHeaders } from '~/server/utils/idp-auth'
 
 type TBody = {
@@ -52,7 +54,7 @@ export default defineEventHandler(async (event) => {
     if (typeof config.proxyUrl === 'string' && config.proxyUrl) {
       agentOption = { https: new HttpsProxyAgent<string>(config.proxyUrl) }
     }
-    const idpEncJwk: TIdpEncJwk = await got(wellKnownData.uri_puk_idp_enc, {
+    const idpEncJwk: TIdpEncJwk = await got(validateUrl(wellKnownData.uri_puk_idp_enc).toString(), {
       agent: agentOption,
       headers: idpDevAuthHeaders(wellKnownData.uri_puk_idp_enc, config.idpDevApiKey)
     }).json<TIdpEncJwk>()
@@ -63,6 +65,13 @@ export default defineEventHandler(async (event) => {
     // get tokens
     return await getTokens(params, tokenKey, wellKnownData, agentOption, config.idpDevApiKey)
   } catch (err) {
+    // SSRF validation (validateUrl) rejects a host with a 403 H3Error. Propagate it
+    // unchanged so the real status/message reaches the client instead of being
+    // demoted to a generic 400 below.
+    if (isError(err) && err.statusCode === 403) {
+      return err
+    }
+
     // return http error
     return createError({
       statusCode: 400,
@@ -122,7 +131,7 @@ const getTokens = async (
 ) => {
   try {
     // send with got
-    const response = await got(wellKnownData.token_endpoint, {
+    const response = await got(validateUrl(wellKnownData.token_endpoint).toString(), {
       method: 'POST',
       body: params.toString(),
       headers: {
@@ -145,6 +154,11 @@ const getTokens = async (
       expires_in: response.expires_in
     }
   } catch (err) {
+    // SSRF validation (validateUrl) rejects a host with a 403 H3Error — rethrow it
+    // unchanged so the outer catch can propagate the real status/message.
+    if (isError(err) && err.statusCode === 403) {
+      throw err
+    }
     throw new Error(err.gematik_error_text || err.message)
   }
 }

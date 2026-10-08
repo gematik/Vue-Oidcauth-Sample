@@ -79,6 +79,10 @@ export const useAuthStore = defineStore('authStore', {
           }
         })
 
+        if (response.status === 403) {
+          throw new Error('Der konfigurierte IDP-Host ist nicht zugelassen. Bitte Einstellungen prüfen.')
+        }
+
         if (response.status !== 200) {
           throw new Error('Error on reading well known data')
         }
@@ -105,13 +109,19 @@ export const useAuthStore = defineStore('authStore', {
         clientId
       }
 
-      this.accessData[cardType] = await fetch('/api/get-access-data', {
+      const response = await fetch('/api/get-access-data', {
         method: 'POST',
         body: JSON.stringify(postData),
         headers: {
           'Content-Type': 'application/json'
         }
-      }).then((res) => res.json())
+      })
+
+      if (response.status === 403) {
+        throw new Error('Der konfigurierte IDP-Host ist nicht zugelassen. Bitte Einstellungen prüfen.')
+      }
+
+      this.accessData[cardType] = await response.json()
     }
   },
   getters: {}

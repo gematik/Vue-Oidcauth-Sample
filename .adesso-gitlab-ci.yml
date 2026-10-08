@@ -1,0 +1,28 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - when: always
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  image: node:22-alpine
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npm run build
+
+include:
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+gemnasium-dependency_scanning:
+  stage: test

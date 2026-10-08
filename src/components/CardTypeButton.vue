@@ -38,6 +38,13 @@
         >
           Start {{ scenario }}
         </button>
+        <a
+          v-if="v5Callback"
+          class="block mt-2 text-sm text-blue-600 hover:text-blue-800 underline cursor-pointer"
+          @click.stop="v5Callback?.(scenario)"
+        >
+          Start with v5
+        </a>
       </div>
 
       <div class="px-6 card-type__info">
@@ -65,6 +72,7 @@ const i18n = i18nData as Record<string, Record<string, string>>
 const props = defineProps<{
   scenario: string
   callback: (scenario: string) => void
+  v5Callback?: (scenario: string) => void
 }>()
 
 const validTypes = ['smc-b', 'hba', 'multi']

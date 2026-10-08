@@ -4,6 +4,9 @@
 
 # Release Vue-Oidcauth-Sample
 
+## Release 4.17.1
+* Added whitelisting for IDP URLs
+* 
 ## Release 4.17.0
 * HTTP port-based authenticator flow implemented
 

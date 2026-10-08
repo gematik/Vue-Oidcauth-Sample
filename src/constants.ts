@@ -80,6 +80,18 @@ export const CONFIG_KEYS = {
   REDIRECT_AUTOMATICALLY_KEY: 'REDIRECT_AUTOMATICALLY_KEY'
 }
 
+/**
+ * Allowed IDP hosts for the authentication process.
+ * We have to allow only specific hosts for security reasons, to prevent SSRF attacks.
+ */
+export const IDP_ALLOWED_HOSTS = [
+  'idp.app.ti-dienste.de',
+  'idp.zentral.idp.splitdns.ti-dienste.de',
+  'idp-ref.app.ti-dienste.de',
+  'idp-ref.zentral.idp.splitdns.ti-dienste.de',
+  'idp.dev.gematik.solutions'
+]
+
 // see the readme file to see more about the default configs
 export const DEFAULT_CONFIG = {
   ...runtimeConfig?.public?.defaultConfigs?.DEFAULT_CONFIG,

@@ -20,12 +20,12 @@
  * For additional notes and disclaimer from gematik and in case of changes by gematik find details in the "Readme" file.
  */
 
-import yaml from 'js-yaml'
+import { load } from 'js-yaml'
 
 // read default-configs.yml from root
 let defaultConfigs = {}
 try {
-  defaultConfigs = yaml.load(require('fs').readFileSync('./default-configs.yml', 'utf8'))
+  defaultConfigs = load(require('fs').readFileSync('./default-configs.yml', 'utf8'))
 } catch (e) {
   console.info('Could not found default-configs.yml. Add it to root directory to have default configs.')
 }
